@@ -1,0 +1,227 @@
+// ORMS — Office Request Management System
+// Prisma schema
+//
+// NOTE ON DATABASE PROVIDER
+// This prototype ships configured for SQLite so it runs anywhere with zero
+// external setup (`npm run db:push && npm run db:seed && npm run dev`).
+// The schema intentionally avoids SQLite-only features, so moving to
+// PostgreSQL for a real deployment is a two-line change:
+//   1. provider = "postgresql"
+//   2. DATABASE_URL="postgresql://user:pass@host:5432/orms"
+// See README.md "Switching to PostgreSQL" for the full walkthrough.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // A department's Head is a User with role DEPARTMENT_HEAD whose
+  // departmentId points back here. We look that up via the members
+  // relation rather than a second FK, to avoid a circular required
+  // reference between Department and User at creation time.
+  members            User[]           @relation("DepartmentMembers")
+  requestsSent       Request[]        @relation("RequestingDepartment")
+  requestsReceived   Request[]        @relation("ReceivingDepartment")
+  transfersFrom      RequestTransfer[] @relation("TransferFromDept")
+  transfersTo        RequestTransfer[] @relation("TransferToDept")
+
+  @@map("departments")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  staffId      String   @unique
+  fullName     String
+  username     String   @unique
+  passwordHash String
+  role         String
+  departmentId String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  department Department? @relation("DepartmentMembers", fields: [departmentId], references: [id])
+
+  requestsCreated  Request[]               @relation("Requester")
+  assignedRequests Request[]               @relation("AssignedOfficer")
+  comments         Comment[]
+  attachments      Attachment[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  statusChanges    RequestStatusHistory[]
+  transfersMade    RequestTransfer[]
+  assignmentsMade  RequestAssignment[]     @relation("AssignedBy")
+  assignmentsGiven RequestAssignment[]     @relation("AssignedTo")
+
+  @@index([departmentId])
+  @@map("users")
+}
+
+model Counter {
+  id    String @id
+  value Int    @default(0)
+
+  @@map("counters")
+}
+
+model Request {
+  id                     String        @id @default(cuid())
+  referenceNumber        String        @unique
+  subject                String
+  details                String
+  priority               String      @default("NORMAL")
+  status                 String       @default("SUBMITTED")
+
+  requesterId            String
+  requestingDepartmentId String
+  receivingDepartmentId  String
+  assignedOfficerId      String?
+
+  resolvedAt DateTime?
+  closedAt   DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  requester           User       @relation("Requester", fields: [requesterId], references: [id])
+  requestingDepartment Department @relation("RequestingDepartment", fields: [requestingDepartmentId], references: [id])
+  receivingDepartment  Department @relation("ReceivingDepartment", fields: [receivingDepartmentId], references: [id])
+  assignedOfficer      User?      @relation("AssignedOfficer", fields: [assignedOfficerId], references: [id])
+
+  comments       Comment[]
+  attachments    Attachment[]
+  statusHistory  RequestStatusHistory[]
+  transfers      RequestTransfer[]
+  notifications  Notification[]
+  assignments    RequestAssignment[]
+
+  @@index([requesterId])
+  @@index([requestingDepartmentId])
+  @@index([receivingDepartmentId])
+  @@index([assignedOfficerId])
+  @@index([status])
+  @@map("requests")
+}
+
+model RequestStatusHistory {
+  id          String        @id @default(cuid())
+  requestId   String
+  status      String
+  note        String?
+  changedById String
+  createdAt   DateTime      @default(now())
+
+  request   Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  changedBy User    @relation(fields: [changedById], references: [id])
+
+  @@index([requestId])
+  @@map("request_status_history")
+}
+
+model RequestAssignment {
+  id              String   @id @default(cuid())
+  requestId       String
+  assignedToId    String
+  assignedById    String
+  note            String?
+  createdAt       DateTime @default(now())
+
+  request    Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  assignedTo User    @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedBy User    @relation("AssignedBy", fields: [assignedById], references: [id])
+
+  @@index([requestId])
+  @@map("request_assignments")
+}
+
+model RequestTransfer {
+  id               String   @id @default(cuid())
+  requestId        String
+  fromDepartmentId String
+  toDepartmentId   String
+  reason           String
+  transferredById  String
+  createdAt        DateTime @default(now())
+
+  request        Request    @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fromDepartment Department @relation("TransferFromDept", fields: [fromDepartmentId], references: [id])
+  toDepartment   Department @relation("TransferToDept", fields: [toDepartmentId], references: [id])
+  transferredBy  User       @relation(fields: [transferredById], references: [id])
+
+  @@index([requestId])
+  @@map("request_transfers")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  requestId String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  @@index([requestId])
+  @@map("comments")
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  requestId    String
+  fileName     String
+  storedName   String
+  mimeType     String
+  size         Int
+  uploadedById String
+  createdAt    DateTime @default(now())
+
+  request    Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  uploadedBy User    @relation(fields: [uploadedById], references: [id])
+
+  @@index([requestId])
+  @@map("attachments")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  requestId String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request Request? @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
