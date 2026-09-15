@@ -3,11 +3,7 @@ import { addAttachmentAction } from "@/app/(app)/requests/[id]/actions";
 
 export function AttachmentUploadForm({ requestId }: { requestId: string }) {
   return (
-    <form
-      action={addAttachmentAction}
-      encType="multipart/form-data"
-      className="flex flex-wrap items-center gap-3"
-    >
+    <form action={addAttachmentAction} className="flex flex-wrap items-center gap-3">
       <input type="hidden" name="requestId" value={requestId} />
       <input
         type="file"

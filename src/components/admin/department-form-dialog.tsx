@@ -1,7 +1,7 @@
 import { Modal } from "@/components/ui/modal";
 import { Field, inputClass } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { createDepartmentAction, updateDepartmentAction } from "@/app/departments/actions";
+import { createDepartmentAction, updateDepartmentAction } from "@/app/(app)/departments/actions";
 
 export function DepartmentFormDialog({
   department,

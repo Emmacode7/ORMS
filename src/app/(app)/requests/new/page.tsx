@@ -40,7 +40,7 @@ export default async function NewRequestPage({
           <CardTitle>Request Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createRequestAction} encType="multipart/form-data" className="space-y-5">
+          <form action={createRequestAction} className="space-y-5">
             <Field label="Requesting Department" htmlFor="requestingDepartment">
               <input
                 id="requestingDepartment"
