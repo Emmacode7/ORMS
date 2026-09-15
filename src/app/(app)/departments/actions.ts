@@ -24,14 +24,16 @@ export async function createDepartmentAction(formData: FormData) {
     redirect("/departments?error=duplicate");
   }
 
-  const dept = await prisma.department.create({ data: parsed.data });
+  await prisma.$transaction(async (tx) => {
+    const dept = await tx.department.create({ data: parsed.data });
 
-  await logAudit(prisma, {
-    actorId: user.id,
-    action: "DEPARTMENT_CREATED",
-    entityType: "Department",
-    entityId: dept.id,
-    metadata: { name: dept.name },
+    await logAudit(tx, {
+      actorId: user.id,
+      action: "DEPARTMENT_CREATED",
+      entityType: "Department",
+      entityId: dept.id,
+      metadata: { name: dept.name },
+    });
   });
 
   revalidatePath("/departments");
@@ -61,14 +63,16 @@ export async function updateDepartmentAction(formData: FormData) {
     redirect("/departments?error=duplicate");
   }
 
-  await prisma.department.update({ where: { id: departmentId }, data });
+  await prisma.$transaction(async (tx) => {
+    const department = await tx.department.update({ where: { id: departmentId }, data });
 
-  await logAudit(prisma, {
-    actorId: user.id,
-    action: "DEPARTMENT_UPDATED",
-    entityType: "Department",
-    entityId: departmentId,
-    metadata: { name: data.name, isActive: data.isActive },
+    await logAudit(tx, {
+      actorId: user.id,
+      action: "DEPARTMENT_UPDATED",
+      entityType: "Department",
+      entityId: department.id,
+      metadata: { name: data.name, isActive: data.isActive },
+    });
   });
 
   revalidatePath("/departments");
