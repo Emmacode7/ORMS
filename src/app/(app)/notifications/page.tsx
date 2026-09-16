@@ -3,9 +3,8 @@ import { prisma } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDateTime } from "@/lib/utils";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { markNotificationReadAction, markAllNotificationsReadAction } from "./actions";
+import { markNotificationReadAction, markAllNotificationsReadAction, openNotificationAction } from "./actions";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -43,11 +42,17 @@ export default async function NotificationsPage() {
               key={n.id}
               className={cn("flex items-start justify-between gap-3 px-4 py-3", !n.isRead && "bg-navy-50/40")}
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 {n.requestId ? (
-                  <Link href={`/requests/${n.requestId}`} className="text-sm text-ink-900 hover:underline">
-                    {n.message}
-                  </Link>
+                  <form action={openNotificationAction}>
+                    <input type="hidden" name="notificationId" value={n.id} />
+                    <button
+                      type="submit"
+                      className="text-left text-sm text-ink-900 hover:underline"
+                    >
+                      {n.message}
+                    </button>
+                  </form>
                 ) : (
                   <p className="text-sm text-ink-900">{n.message}</p>
                 )}

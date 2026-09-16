@@ -15,6 +15,7 @@ export function navForRole(role: Role): NavItem[] {
     case "DEPARTMENT_OFFICER":
       return [
         { label: "Dashboard", href: "/dashboard" },
+        { label: "New Request", href: "/requests/new" },
         { label: "Assigned to Me", href: "/requests" },
         { label: "Notifications", href: "/notifications" },
         { label: "Profile", href: "/profile" },
@@ -22,6 +23,7 @@ export function navForRole(role: Role): NavItem[] {
     case "DEPARTMENT_HEAD":
       return [
         { label: "Dashboard", href: "/dashboard" },
+        { label: "New Request", href: "/requests/new" },
         { label: "Department Requests", href: "/requests" },
         { label: "Unassigned", href: "/requests?status=RECEIVED" },
         { label: "Assigned", href: "/requests?status=ASSIGNED" },
@@ -33,6 +35,7 @@ export function navForRole(role: Role): NavItem[] {
     case "MANAGEMENT":
       return [
         { label: "Dashboard", href: "/dashboard" },
+        { label: "New Request", href: "/requests/new" },
         { label: "All Requests", href: "/requests" },
         { label: "Departments", href: "/departments" },
         { label: "Reports", href: "/reports" },
@@ -42,6 +45,7 @@ export function navForRole(role: Role): NavItem[] {
     case "SYSTEM_ADMIN":
       return [
         { label: "Dashboard", href: "/dashboard" },
+        { label: "New Request", href: "/requests/new" },
         { label: "Requests", href: "/requests" },
         { label: "Users", href: "/admin/users" },
         { label: "Departments", href: "/departments" },

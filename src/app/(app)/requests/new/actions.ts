@@ -56,5 +56,5 @@ export async function createRequestAction(formData: FormData) {
     });
   }
 
-  redirect(`/requests/${result.data.id}?created=1`);
+  redirect(`/dashboard?createdRef=${result.data.referenceNumber}&createdId=${result.data.id}`);
 }
