@@ -61,13 +61,20 @@ export function canViewRequest(
   }
 }
 
-/** Whether this user may comment on / attach files to this request. */
+/**
+ * Whether this user may comment on / attach files to this request.
+ * Management is read-only oversight everywhere *except* requests routed to
+ * their own department (Management is itself one of the seeded departments
+ * and can receive requests directly, e.g. "approval needed" requests) —
+ * there they can act on it the same way a Department Head would.
+ */
 export function canActOnRequest(
   user: PermissionUser,
   request: MinimalRequest
 ): boolean {
   if (user.role === "SYSTEM_ADMIN") return true;
-  if (user.role === "MANAGEMENT") return false; // read-only oversight
+  if (user.role === "MANAGEMENT")
+    return request.receivingDepartmentId === user.departmentId;
   if (user.role === "STAFF") return request.requesterId === user.id;
   if (user.role === "DEPARTMENT_OFFICER")
     return request.assignedOfficerId === user.id;
@@ -76,14 +83,18 @@ export function canActOnRequest(
   return false;
 }
 
-/** Whether this user may assign or transfer this request. */
+/**
+ * Whether this user may assign or transfer this request. Same rule as
+ * above: Management can manage requests sent to their own department, but
+ * not other departments' requests (oversight there stays read-only).
+ */
 export function canManageRequest(
   user: PermissionUser,
   request: MinimalRequest
 ): boolean {
   if (user.role === "SYSTEM_ADMIN") return true;
   return (
-    user.role === "DEPARTMENT_HEAD" &&
+    (user.role === "DEPARTMENT_HEAD" || user.role === "MANAGEMENT") &&
     request.receivingDepartmentId === user.departmentId
   );
 }
@@ -95,7 +106,7 @@ export function canUpdateStatus(
 ): boolean {
   if (user.role === "SYSTEM_ADMIN") return true;
   if (
-    user.role === "DEPARTMENT_HEAD" &&
+    (user.role === "DEPARTMENT_HEAD" || user.role === "MANAGEMENT") &&
     request.receivingDepartmentId === user.departmentId
   )
     return true;

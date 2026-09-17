@@ -1,4 +1,5 @@
 import { StatCard } from "@/components/ui/stat-card";
+import { LinkButton } from "@/components/ui/button";
 import { RequestTable } from "@/components/requests/request-table";
 import type { getHeadDashboardData } from "@/lib/dashboard";
 import type { SessionUser } from "@/lib/session";
@@ -12,13 +13,18 @@ export function DepartmentHeadDashboard({
 }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-900">
-          {user.department?.name ?? "Department"} Dashboard
-        </h1>
-        <p className="text-sm text-ink-500">
-          Requests directed to your department, {user.fullName.split(" ")[0]}.
-        </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-xl font-semibold text-ink-900">
+            {user.department?.name ?? "Department"} Dashboard
+          </h1>
+          <p className="text-sm text-ink-500">
+            Requests directed to your department, {user.fullName.split(" ")[0]}.
+          </p>
+        </div>
+        <LinkButton href="/requests/new" size="lg">
+          New Request
+        </LinkButton>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

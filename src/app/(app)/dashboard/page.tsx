@@ -65,7 +65,7 @@ export default async function DashboardPage({
       return (
         <div className="space-y-6">
           {confirmation}
-          <ManagementDashboard data={data} />
+          <ManagementDashboard user={user} data={data} />
         </div>
       );
     }

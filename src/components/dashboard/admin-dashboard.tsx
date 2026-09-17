@@ -11,9 +11,14 @@ export function AdminDashboard({
 }) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-ink-900">System Administration</h1>
-        <p className="text-sm text-ink-500">Users, departments, and system-wide activity.</p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-xl font-semibold text-ink-900">System Administration</h1>
+          <p className="text-sm text-ink-500">Users, departments, and system-wide activity.</p>
+        </div>
+        <LinkButton href="/requests/new" size="lg">
+          New Request
+        </LinkButton>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
