@@ -13,9 +13,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; reset?: string }>;
+  searchParams: Promise<{ error?: string; reset?: string; passwordChanged?: string }>;
 }) {
-  const { error, reset } = await searchParams;
+  const { error, reset, passwordChanged } = await searchParams;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-navy-700 px-4">
@@ -32,6 +32,13 @@ export default async function LoginPage({
           {reset === "1" && (
             <div className="mb-4">
               <Alert variant="success">Your password has been reset. Please sign in.</Alert>
+            </div>
+          )}
+          {passwordChanged === "1" && (
+            <div className="mb-4">
+              <Alert variant="success">
+                Your password has been updated. Please sign in again.
+              </Alert>
             </div>
           )}
           {error && (

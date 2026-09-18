@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/authorization";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
+import { clearSessionCookie } from "@/lib/session";
 import { z } from "zod";
 
 const changePasswordSchema = z
@@ -37,7 +38,10 @@ export async function changePasswordAction(formData: FormData) {
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, sessionVersion: { increment: 1 } },
+  });
 
   await logAudit(prisma, {
     actorId: user.id,
@@ -47,5 +51,10 @@ export async function changePasswordAction(formData: FormData) {
     metadata: { self: true },
   });
 
-  redirect("/profile?success=1");
+  // Changing your own password bumps sessionVersion, which immediately
+  // invalidates the session cookie already in this browser (see
+  // src/lib/session.ts). Sign out cleanly here and ask for a fresh login,
+  // rather than leaving a cookie that would just fail on the next request.
+  await clearSessionCookie();
+  redirect("/login?passwordChanged=1");
 }

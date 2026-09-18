@@ -19,7 +19,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
 model Department {
   id          String   @id @default(cuid())
   name        String   @unique

@@ -19,7 +19,7 @@ import {
   MAX_UPLOAD_BYTES,
 } from "@/lib/validation";
 import { saveFile } from "@/lib/storage";
-import type { RequestStatus } from "@prisma/client";
+import type { RequestStatus } from "@/lib/enums";
 
 function back(requestId: string, params: Record<string, string>): never {
   const qs = new URLSearchParams(params).toString();

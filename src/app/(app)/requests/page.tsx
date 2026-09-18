@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { RequestTable } from "@/components/requests/request-table";
 import { inputClass } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import type { Priority, RequestStatus } from "@prisma/client";
+import type { Priority, RequestStatus } from "@/lib/enums";
 
 const STATUSES: RequestStatus[] = [
   "SUBMITTED",

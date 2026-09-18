@@ -11,7 +11,8 @@ import {
   canViewRequest,
 } from "./authorization";
 import type { SessionUser } from "./session";
-import type { Priority, RequestStatus, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import type { Priority, RequestStatus } from "@/lib/enums";
 
 export const requestDetailInclude = {
   requester: true,

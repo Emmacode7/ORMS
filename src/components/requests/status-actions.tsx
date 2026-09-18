@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { updateStatusAction, closeRequestAction } from "@/app/(app)/requests/[id]/actions";
-import type { RequestStatus } from "@prisma/client";
+import type { RequestStatus } from "@/lib/enums";
 
 const OFFICER_TRANSITIONS: Record<string, { status: RequestStatus; label: string }[]> = {
   ASSIGNED: [

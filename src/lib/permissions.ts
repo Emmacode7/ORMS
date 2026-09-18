@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client";
+import type { Role } from "@/lib/enums";
 
 // Pure permission-check functions with no dependency on Prisma's runtime
 // client or Next.js request context — safe to unit test in isolation.

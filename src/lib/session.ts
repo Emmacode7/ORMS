@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { prisma } from "./db";
 import type { User, Department } from "@prisma/client";
+import type { Role } from "./enums";
 
 const COOKIE_NAME = "orms_session";
 const SESSION_DURATION_SECONDS = 8 * 60 * 60; // 8 hours
@@ -27,11 +28,10 @@ export async function createSessionToken(
   userId: string,
   sessionVersion: number
 ): Promise<string> {
-  return new SignJWT({})
+  return new SignJWT({ sessionVersion })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
-    .setClaim("sessionVersion", sessionVersion)
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
     .sign(getSecretKey());
 }
@@ -73,7 +73,11 @@ export async function clearSessionCookie() {
   store.delete(COOKIE_NAME);
 }
 
-export type SessionUser = User & { department: Department | null };
+// `role` is re-typed here from Prisma's plain `string` (see lib/enums.ts
+// for why) to our app-level Role union, since every write path (user
+// creation/edit, the seed script) only ever stores one of those five known
+// values into that column.
+export type SessionUser = Omit<User, "role"> & { role: Role; department: Department | null };
 
 /**
  * Load the currently authenticated, active user from the database, based on
@@ -97,7 +101,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!user || !user.isActive || user.sessionVersion !== payload.sessionVersion) {
     return null;
   }
-  return user;
+  return user as SessionUser;
 }
 
 export { COOKIE_NAME as SESSION_COOKIE_NAME };

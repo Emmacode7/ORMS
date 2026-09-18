@@ -1,6 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import type { Role } from "@prisma/client";
+import type { Role } from "@/lib/enums";
 import { getCurrentUser, type SessionUser } from "./session";
 
 // Request/DB-aware auth helpers. The pure RBAC rules themselves (who can

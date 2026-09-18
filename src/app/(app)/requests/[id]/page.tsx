@@ -16,6 +16,7 @@ import { CommentForm } from "@/components/requests/comment-form";
 import { CommentList } from "@/components/requests/comment-list";
 import { AttachmentList } from "@/components/requests/attachment-list";
 import { AttachmentUploadForm } from "@/components/requests/attachment-upload-form";
+import type { RequestStatus } from "@/lib/enums";
 
 const SUCCESS_MESSAGES: Record<string, string> = {
   assigned: "Request assigned successfully.",
@@ -112,7 +113,10 @@ export default async function RequestDetailPage({
       {(updatePermission || closePermission) && (
         <StatusActions
           requestId={request.id}
-          status={request.status}
+          // `status` comes from the database as a plain string (see
+          // lib/enums.ts for why); it only ever holds one of the eight
+          // known status values, all written through validated code paths.
+          status={request.status as RequestStatus}
           canUpdate={updatePermission}
           canClose={closePermission}
         />

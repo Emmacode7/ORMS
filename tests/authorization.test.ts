@@ -75,9 +75,16 @@ describe("canViewRequest — IDOR protection", () => {
 });
 
 describe("canActOnRequest — commenting / attachments", () => {
-  it("management cannot comment (read-only oversight)", () => {
-    const mgmt = user({ id: "m1", role: "MANAGEMENT" });
-    expect(canActOnRequest(mgmt, request({}))).toBe(false);
+  it("management cannot comment on another department's request (read-only oversight)", () => {
+    const mgmt = user({ id: "m1", role: "MANAGEMENT", departmentId: "dept-management" });
+    expect(canActOnRequest(mgmt, request({ receivingDepartmentId: ICT }))).toBe(false);
+  });
+
+  it("management CAN comment on a request routed to their own department", () => {
+    const mgmt = user({ id: "m1", role: "MANAGEMENT", departmentId: "dept-management" });
+    expect(
+      canActOnRequest(mgmt, request({ receivingDepartmentId: "dept-management" }))
+    ).toBe(true);
   });
 
   it("the requester can comment on their own request", () => {
@@ -108,6 +115,14 @@ describe("canManageRequest — assign / transfer", () => {
   it("admin can always manage", () => {
     const admin = user({ id: "a1", role: "SYSTEM_ADMIN" });
     expect(canManageRequest(admin, request({}))).toBe(true);
+  });
+
+  it("management can assign/transfer requests routed to their own department, but not others", () => {
+    const mgmt = user({ id: "m1", role: "MANAGEMENT", departmentId: "dept-management" });
+    expect(canManageRequest(mgmt, request({ receivingDepartmentId: "dept-management" }))).toBe(
+      true
+    );
+    expect(canManageRequest(mgmt, request({ receivingDepartmentId: ICT }))).toBe(false);
   });
 });
 

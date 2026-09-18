@@ -156,7 +156,7 @@ export async function resetPasswordAction(formData: FormData) {
   const passwordHash = await hashPassword(parsed.data.newPassword);
   await prisma.user.update({
     where: { id: parsed.data.userId },
-    data: { passwordHash },
+    data: { passwordHash, sessionVersion: { increment: 1 } },
   });
 
   await logAudit(prisma, {
