@@ -29,7 +29,7 @@ export default async function LoginPage({
         </div>
 
         <div className="rounded-md border border-white/10 bg-white p-6">
-          {reset && (
+          {reset === "1" && (
             <div className="mb-4">
               <Alert variant="success">Your password has been reset. Please sign in.</Alert>
             </div>

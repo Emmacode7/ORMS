@@ -19,14 +19,19 @@ function getSecretKey(): Uint8Array {
 
 export type SessionPayload = {
   sub: string; // user id
+  sessionVersion: number;
 };
 
 /** Sign a session JWT for the given user id and return the token string. */
-export async function createSessionToken(userId: string): Promise<string> {
+export async function createSessionToken(
+  userId: string,
+  sessionVersion: number
+): Promise<string> {
   return new SignJWT({})
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(userId)
     .setIssuedAt()
+    .setClaim("sessionVersion", sessionVersion)
     .setExpirationTime(`${SESSION_DURATION_SECONDS}s`)
     .sign(getSecretKey());
 }
@@ -37,16 +42,22 @@ export async function verifySessionToken(
 ): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecretKey());
-    if (!payload.sub) return null;
-    return { sub: payload.sub };
+    if (
+      !payload.sub ||
+      typeof payload.sessionVersion !== "number" ||
+      !Number.isInteger(payload.sessionVersion)
+    ) {
+      return null;
+    }
+    return { sub: payload.sub, sessionVersion: payload.sessionVersion };
   } catch {
     return null;
   }
 }
 
 /** Set the signed session cookie on the current response. */
-export async function setSessionCookie(userId: string) {
-  const token = await createSessionToken(userId);
+export async function setSessionCookie(userId: string, sessionVersion: number) {
+  const token = await createSessionToken(userId, sessionVersion);
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -83,7 +94,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     include: { department: true },
   });
 
-  if (!user || !user.isActive) return null;
+  if (!user || !user.isActive || user.sessionVersion !== payload.sessionVersion) {
+    return null;
+  }
   return user;
 }
 

@@ -48,7 +48,7 @@ export async function loginAction(formData: FormData) {
     redirect("/login?error=invalid");
   }
 
-  await setSessionCookie(user.id);
+  await setSessionCookie(user.id, user.sessionVersion);
   await logAudit(prisma, {
     actorId: user.id,
     action: "USER_LOGIN",

@@ -38,7 +38,10 @@ export async function forgotPasswordAction(formData: FormData) {
   }
 
   const passwordHash = await hashPassword(parsed.data.newPassword);
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash, sessionVersion: { increment: 1 } },
+  });
 
   await logAudit(prisma, {
     actorId: user.id,
