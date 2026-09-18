@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/authorization";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, inputClass } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { humanizeRole } from "@/lib/utils";
@@ -56,35 +57,29 @@ export default async function ProfilePage({
           )}
           <form action={changePasswordAction} className="space-y-4">
             <Field label="Current Password" htmlFor="currentPassword" required>
-              <input
+              <PasswordInput
                 id="currentPassword"
                 name="currentPassword"
-                type="password"
                 required
                 autoComplete="current-password"
-                className={inputClass}
               />
             </Field>
             <Field label="New Password" htmlFor="newPassword" required>
-              <input
+              <PasswordInput
                 id="newPassword"
                 name="newPassword"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className={inputClass}
               />
             </Field>
             <Field label="Confirm New Password" htmlFor="confirmPassword" required>
-              <input
+              <PasswordInput
                 id="confirmPassword"
                 name="confirmPassword"
-                type="password"
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className={inputClass}
               />
             </Field>
             <Button type="submit">Update Password</Button>

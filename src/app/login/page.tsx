@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { Alert } from "@/components/ui/alert";
 import { inputClass, Field } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { loginAction } from "./actions";
 
@@ -11,9 +13,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; reset?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, reset } = await searchParams;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-navy-700 px-4">
@@ -27,6 +29,11 @@ export default async function LoginPage({
         </div>
 
         <div className="rounded-md border border-white/10 bg-white p-6">
+          {reset && (
+            <div className="mb-4">
+              <Alert variant="success">Your password has been reset. Please sign in.</Alert>
+            </div>
+          )}
           {error && (
             <div className="mb-4">
               <Alert variant="error">{ERROR_MESSAGES[error] ?? "Something went wrong."}</Alert>
@@ -45,19 +52,18 @@ export default async function LoginPage({
               />
             </Field>
             <Field label="Password" htmlFor="password" required>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className={inputClass}
-              />
+              <PasswordInput id="password" name="password" autoComplete="current-password" required />
             </Field>
             <Button type="submit" className="w-full" size="lg">
               Sign in
             </Button>
           </form>
+
+          <p className="mt-4 text-center text-sm">
+            <Link href="/forgot-password" className="text-navy-700 hover:underline">
+              Forgot password?
+            </Link>
+          </p>
         </div>
 
         <p className="mt-4 text-center text-xs text-navy-100/50">

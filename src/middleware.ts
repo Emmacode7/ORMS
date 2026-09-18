@@ -9,7 +9,7 @@ import { jwtVerify } from "jose";
 // the database via getCurrentUser()/requireRole(). See src/lib/authorization.ts.
 
 const COOKIE_NAME = "orms_session";
-const PUBLIC_PATHS = ["/login"];
+const PUBLIC_PATHS = ["/login", "/forgot-password"];
 
 async function hasValidSession(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get(COOKIE_NAME)?.value;
