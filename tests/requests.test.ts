@@ -1,21 +1,67 @@
 /**
  * Integration tests for the request lifecycle. These exercise real Prisma
- * queries against a disposable SQLite database, so `npm run db:generate`
- * must have been run at least once before this file runs (see README
- * "Running tests"). Env vars are set before any `@/lib/*` module is
- * imported — those modules construct a PrismaClient at import time, so the
- * imports below are deliberately dynamic (inside beforeAll) rather than
- * static top-of-file imports.
+ * queries against your actual Postgres database (DATABASE_URL, read from
+ * .env below), isolated into their own schema (test_orms) so they never
+ * touch demo/seed data — that schema is dropped and recreated fresh on each
+ * run, and dropped again on teardown. `npm run db:generate` must have been
+ * run at least once before this file runs (see README "Running tests").
+ * Env vars are set before any `@/lib/*` module is imported — those modules
+ * construct a PrismaClient at import time, so the imports below are
+ * deliberately dynamic (inside beforeAll) rather than static top-of-file
+ * imports.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { execSync } from "node:child_process";
-import { existsSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
-const TEST_DB_FILE = path.resolve(__dirname, "test-integration.db");
-process.env.DATABASE_URL = `file:${TEST_DB_FILE}`;
-process.env.SESSION_SECRET = "test-only-session-secret-do-not-use-in-production";
+const TEST_SCHEMA = "test_orms";
+
+// vitest doesn't load .env on its own (Next.js does that for its own
+// commands, but this is a separate process) — read it manually, without
+// pulling in a new dependency for something this small.
+function loadDotEnv() {
+  const envPath = path.resolve(__dirname, "../.env");
+  if (!existsSync(envPath)) return;
+  for (const line of readFileSync(envPath, "utf-8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!(key in process.env)) process.env[key] = value;
+  }
+}
+loadDotEnv();
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL is not set. Copy .env.example to .env and fill in your Postgres connection string before running tests."
+  );
+}
+
+const BASE_DATABASE_URL = process.env.DATABASE_URL;
+const TEST_DATABASE_URL = BASE_DATABASE_URL.includes("?")
+  ? `${BASE_DATABASE_URL}&schema=${TEST_SCHEMA}`
+  : `${BASE_DATABASE_URL}?schema=${TEST_SCHEMA}`;
+process.env.DATABASE_URL = TEST_DATABASE_URL;
+process.env.SESSION_SECRET =
+  process.env.SESSION_SECRET ?? "test-only-session-secret-do-not-use-in-production";
 process.env.UPLOAD_DIR = path.resolve(__dirname, "test-uploads");
+
+function dropTestSchema() {
+  execSync(`npx prisma db execute --url "${BASE_DATABASE_URL}" --stdin`, {
+    input: `DROP SCHEMA IF EXISTS ${TEST_SCHEMA} CASCADE;`,
+    stdio: ["pipe", "inherit", "inherit"],
+  });
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let prisma: any;
@@ -28,7 +74,7 @@ let pdfLib: any;
 let staff: any, staff2: any, head: any, officer: any, admin: any, ict: any, maintenance: any;
 
 beforeAll(async () => {
-  if (existsSync(TEST_DB_FILE)) unlinkSync(TEST_DB_FILE);
+  dropTestSchema();
 
   execSync("npx prisma db push --skip-generate --accept-data-loss", {
     stdio: "inherit",
@@ -92,7 +138,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (prisma) await prisma.$disconnect();
-  if (existsSync(TEST_DB_FILE)) unlinkSync(TEST_DB_FILE);
+  dropTestSchema();
 });
 
 describe("request lifecycle", () => {

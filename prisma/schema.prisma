@@ -2,16 +2,16 @@
 // Prisma schema
 //
 // NOTE ON DATABASE PROVIDER
-// This prototype ships configured for SQLite so it runs anywhere with zero
-// external setup (`npm run db:push && npm run db:seed && npm run dev`).
-// The schema intentionally avoids SQLite-only features, so moving to
-// PostgreSQL for a real deployment is a two-line change:
-//   1. provider = "postgresql"
-//   2. DATABASE_URL="postgresql://user:pass@host:5432/orms"
-// See README.md "Switching to PostgreSQL" for the full walkthrough.
+// Running on PostgreSQL (Supabase). Point DATABASE_URL in .env at your
+// connection string, e.g.:
+//   DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+// The project started on SQLite for zero-setup local development; if you
+// ever need to go back to that for quick local testing, it's just
+// provider = "sqlite" and a file: URL — nothing else in the schema depends
+// on either provider.
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

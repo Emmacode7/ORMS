@@ -13,9 +13,9 @@ grow into a production system without a rewrite.
 
 | Layer          | Choice                                              |
 | -------------- | ---------------------------------------------------- |
-| Frontend       | Next.js 14 (App Router), TypeScript, Tailwind CSS    |
+| Frontend       | Next.js 15 (App Router), TypeScript, Tailwind CSS    |
 | Backend        | Next.js Server Actions + Route Handlers              |
-| Database       | SQLite for local/dev (see below), PostgreSQL for prod |
+| Database       | PostgreSQL (Supabase)                                |
 | ORM            | Prisma                                               |
 | Auth           | Username/password, bcrypt hashing, signed JWT session cookie (`jose`) |
 | Validation     | Zod                                                  |
@@ -23,21 +23,23 @@ grow into a production system without a rewrite.
 | PDF generation | pdfkit                                               |
 | Tests          | Vitest                                               |
 
-### Why SQLite by default
+### Database
 
-The schema is written to be Postgres-compatible (no SQLite-only types), so
-switching is a two-line change — see **"Switching to PostgreSQL"** below.
-SQLite lets the prototype run anywhere with zero external services: clone,
-`npm install`, `npm run dev`. For a real institutional deployment, switch to
-PostgreSQL first.
+Runs on PostgreSQL via Supabase. Get your connection string from the
+Supabase dashboard (Settings → Database → Connection string → URI, the
+direct connection on port 5432, not the pooled one — `prisma db push` and
+migrations need a direct connection) and put it in `.env` as `DATABASE_URL`.
+The schema has no Postgres-specific features, so it would also run on any
+other Postgres host, or on SQLite for offline local testing if you ever
+need that (just `provider = "sqlite"` and a `file:` URL).
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env          # edit SESSION_SECRET before deploying anywhere real
+cp .env.example .env          # fill in DATABASE_URL and SESSION_SECRET
 npm run db:generate           # generates the Prisma client
-npm run db:push               # creates dev.db and applies the schema
+npm run db:push               # applies the schema to your database
 npm run db:seed               # loads demo departments, users, and requests
 npm run dev
 ```
@@ -166,22 +168,13 @@ tests/                       Vitest unit + integration tests
   resolved/closed, comments, attachments, user/department changes) is
   written to `AuditLog`, which no non-admin role can read or modify.
 
-## Switching to PostgreSQL
+## Using a different Postgres host
 
-1. In `prisma/schema.prisma`, change the datasource:
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
-2. In `.env`, point `DATABASE_URL` at your Postgres instance:
-   ```
-   DATABASE_URL="postgresql://orms_user:password@localhost:5432/orms?schema=public"
-   ```
-3. `npm run db:generate && npm run db:push && npm run db:seed`
-
-Nothing else in the codebase references SQLite directly.
+Nothing in the codebase is Supabase-specific — swap `DATABASE_URL` in
+`.env` for any Postgres connection string (another Supabase project, RDS,
+Render Postgres, a local install, whatever) and everything else is
+unchanged. `npm run db:generate && npm run db:push && npm run db:seed`
+against the new URL and you're on it.
 
 ## Running tests
 
@@ -190,11 +183,13 @@ npm run db:generate   # required once — the integration tests use a real Prism
 npm test
 ```
 
-`tests/authorization.test.ts` covers RBAC/IDOR rules as pure unit tests (no
-database). `tests/requests.test.ts` runs the full request lifecycle —
-creation, unauthorized-access rejection, assignment, status transitions,
-resolution, closing, transfer, and PDF generation — against a disposable
-SQLite database it creates and tears down automatically.
+`tests/authorization.test.ts` and `tests/auth.test.ts` are pure unit tests
+(no database, no network — they'll run anywhere). `tests/requests.test.ts`
+runs the full request lifecycle — creation, unauthorized-access rejection,
+assignment, status transitions, resolution, closing, transfer, and PDF
+generation — against your real `DATABASE_URL`, isolated in its own Postgres
+schema (`test_orms`) so it never touches your demo data, and drops that
+schema when it finishes.
 
 ## Deployment notes
 
